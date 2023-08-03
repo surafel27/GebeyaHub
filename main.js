@@ -50,6 +50,8 @@ const products = [
       image: "./assets/products/img4.png"
     }
   ];
+  const weatherAPI_KEY = "f76693de5c51ceb886c717bf7cb2d979";
+  const weatherAPIURL = `https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}&units=metric`;
 
 //toggle a menu section
 function menuHandler() {
@@ -81,21 +83,8 @@ if (currentHour < 12) {
 } else {
     greetingText = "Welcome!"
 }
-const weatherCondition = "sunny";
-const userLocation = "Addis Ababa";
-let temprature = 25;
-let celsiusText = `The weather is ${weatherCondition} in ${userLocation} and it’s ${temprature.toFixed(1)}C outside.`;
-let fahraniteText = `The weather is ${weatherCondition} in ${userLocation} and it’s ${celsiuseToFahr(temprature).toFixed(1)}F outside.`;
 document.querySelector("#greeting").innerHTML = greetingText;
-document.querySelector("p#weather").innerHTML = celsiusText;
 
-document.querySelector(".weather-group").addEventListener("click", function(e){
-    if (e.target.id == "celsius") {
-        document.querySelector("p#weather").innerHTML = celsiusText;
-    } else if(e.target.id == "fahr") {
-        document.querySelector("p#weather").innerHTML = fahraniteText;
-    }
-})
 }
 
 //Date and Time section
@@ -212,9 +201,39 @@ function footerHandler() {
     let currentYear = new Date().getFullYear();
     document.querySelector("footer").textContent = `Ⓒ ${currentYear} - All rights reserved`;
 }
+function weatherHandler() {
+navigator.geolocation.getCurrentPosition(position => {
+    let latitude = position.coords.latitude;
+    let longitude = position.coords.longitude;
+    let URL = weatherAPIURL
+        .replace("{lat}", latitude)
+        .replace("{lon}", longitude)
+        .replace("{API key}", weatherAPI_KEY)
+    fetch(URL).then(response => response.json()).then(data => {
+        const weatherCondition = data.weather[0].description;
+        const userLocation = data.name
+        const temprature = data.main.temp;
+
+        let celsiusText = `The weather is ${weatherCondition} in ${userLocation} and it’s ${temprature.toFixed(1)}C outside.`;
+        let fahraniteText = `The weather is ${weatherCondition} in ${userLocation} and it’s ${celsiuseToFahr(temprature).toFixed(1)}F outside.`;
+        
+        document.querySelector("p#weather").innerHTML = celsiusText;
+        document.querySelector(".weather-group").addEventListener("click", function(e){
+            if (e.target.id == "celsius") {
+                document.querySelector("p#weather").innerHTML = celsiusText;
+            } else if(e.target.id == "fahr") {
+                document.querySelector("p#weather").innerHTML = fahraniteText;
+            }
+        });
+    }).catch((err =>{
+        document.querySelector("p#weather").innerHTML = "Unable to Get Weather Info. Try Again Later!"
+    })); 
+});
+}
 //page Lode
 menuHandler();
 greetingHandler();
+weatherHandler();
 clockHandler();
 galleryHandler();
 productHandler();
